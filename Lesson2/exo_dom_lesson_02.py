@@ -12,19 +12,20 @@ def getWebDOM(url, params):
 
 
 def getCategoryFigures(table, category_name, year):
-    table_cell = table.find("td", text=re.compile("= "+category_name+"$"))
-    category_title = table_cell.get_text()
-    montant_total = table_cell.next_sibling.next_sibling.get_text()
-    moyenne_habitant = table_cell.next_sibling.next_sibling.next_sibling \
-        .next_sibling.get_text()
+    table_row = table.find("td", text=re.compile("= "+category_name+"$")) \
+        .parent
+
+    category_title = table_row.select("td")[0].get_text()
+    moyenne_habitant = table_row.select("td")[2].get_text()
+    moyenne_strate = table_row.select("td")[3].get_text()
     if year not in tableau:
         tableau[year] = {}
     tableau[year][category_name] = {}
     tableau[year][category_name]['Catégorie'] = category_title
-    tableau[year][category_name]['En miliers d''euros'] = \
-        montant_total.replace("\xa0", "")
     tableau[year][category_name]['En euros par habitant'] = \
         moyenne_habitant.replace("\xa0", "")
+    tableau[year][category_name]['Moyenne de la strate'] = \
+        moyenne_strate.replace("\xa0", "")
 
 
 if __name__ == "__main__":
