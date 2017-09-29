@@ -1,0 +1,9 @@
+Multiprocessing
+
+API:
+IFTTT
+
+Sécurité:
+- Basic auth
+- Digest access auth
+- OAuth
