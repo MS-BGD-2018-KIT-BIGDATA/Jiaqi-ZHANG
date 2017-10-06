@@ -38,7 +38,7 @@ if __name__ == "__main__":
     rows = table.select("tr")
     work_dir = "C:\\Users\\Mauva\\Documents\\Work\\INFMDI721\\Lesson3"
 
-    with open(work_dir+'\\Token.txt') as fp:
+    with open(work_dir+'\\GoogleToken.txt') as fp:
         Key = fp.read().replace('\n', '')
 
     villes = [row.select("a")[0].get_text() for row in rows[1:11]]
