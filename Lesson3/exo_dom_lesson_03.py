@@ -23,7 +23,7 @@ def getUserList(table):
 
 def getUserStarMean(user):
     repo_stars = 0
-    TOKEN = "cd2e34b1b0a71e3c3ba581ec5be37c3ae0a48176"
+    TOKEN = "8a9c0529aa3cabeb80c9a1b0e17e519d77cc4fce"
     git_api_url = "https://api.github.com"
     git_user_repos = requests.get(git_api_url + "/users/" + user + "/repos",
                                   auth=("archinul", TOKEN))
