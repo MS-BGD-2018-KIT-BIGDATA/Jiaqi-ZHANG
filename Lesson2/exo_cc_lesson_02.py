@@ -1,9 +1,10 @@
 # coding : utf-8
-
 import requests
 from bs4 import BeautifulSoup
 import re
 from pprint import pprint
+import pandas as pd
+%matplotlib inline
 
 
 def getWebDOM(url):
@@ -11,31 +12,57 @@ def getWebDOM(url):
     return res.text
 
 
-def getCategoryFigures(soup):
-    old_price = soup.find_all(class_="fpStriked")[-1]
-    new_price = soup.find_all(class_="fpPrice")[-1]
+def get_pc_list(url):
+    soup = BeautifulSoup(getWebDOM(url), 'html.parser')
+    pc_url_list = [a['href'] for a in soup.select("div.prdtBloc > a")]
+    return pc_url_list
 
-    return old_price.get_text().replace(' ','').replace('€','').replace('*','').replace(',','.'), new_price.get_text().replace(' ','').replace('€','.').replace('*','')
+
+def getCategoryFigures(soup):
+    try:
+        new_price = soup.find_all(class_="fpPrice")[0]['content']
+    except Exception as e:
+        raise
+
+    try:
+        old_price = soup.select("#addForm span.fpStriked")[0]
+        old_price = old_price.get_text().replace(' ', '').replace(
+            '€', '').replace('*', '').replace(',', '.')
+    except Exception as e:
+        old_price = new_price
+
+    return old_price, new_price
+
+
+def get_prices(url, brand):
+    dict = {}
+    soup = BeautifulSoup(getWebDOM(url), 'html.parser')
+    try:
+        old_price, new_price = getCategoryFigures(soup)
+        dict['brand'] = brand
+        dict['old_price'] = old_price
+        dict['new_price'] = new_price
+    except Exception as e:
+        return None
+
+    return dict
+
 
 if __name__ == "__main__":
-    model_dell_url = "https://www.cdiscount.com/informatique/ordinateurs-pc-portables/dell-dell-notebook-p0pmx-m5510-e3-1505m-16-g/f-1070992-del5397063944996.html"
-    model_acer_url = "https://www.cdiscount.com/informatique/ordinateurs-pc-portables/acer-pc-portable-aspire-e5-774g-57p5-17-3-hd-ra/f-10709-aspiree5774g58j0.html?idOffre=154236317#mpos=6|cd"
+    dell_list = "https://www.cdiscount.com/search/10/dell+pc+portable.html#_his_"
+    acer_list = "https://www.cdiscount.com/search/10/acer+pc+portable.html#_his_"
 
+    # pprint(dell_url_list)
+    dell_prices = [get_prices(url, "Dell") for url in get_pc_list(dell_list)]
+    # asus_prices=[get_prices(url) for url in get_pc_list(asus_list)]
+    acer_prices = [get_prices(url, "Acer") for url in get_pc_list(acer_list)]
 
-    soup = BeautifulSoup(getWebDOM(model_dell_url), 'html.parser')
-    old_price, new_price = getCategoryFigures(soup)
-    rebate = (1 - float(new_price)/float(old_price)) * 100
+    prices = dell_prices + acer_prices
 
-    print("Dell:")
-    print(old_price)
-    print(new_price)
-    print(rebate)
+    df_prices = pd.DataFrame(prices)
 
-    soup = BeautifulSoup(getWebDOM(model_acer_url), 'html.parser')
-    old_price, new_price = getCategoryFigures(soup)
-    rebate = (1 - float(new_price)/float(old_price)) * 100
+    df_prices['rebate'] = (1 - df_prices["new_price"].astype('float64') /
+                           df_prices["old_price"].astype('float64')) * 100
 
-    print("Acer:")
-    print(old_price)
-    print(new_price)
-    print(rebate)
+    df_rebates = df_prices.groupby("brand").mean()
+    df_rebates.plot(kind="bar", figsize=(12, 6))
